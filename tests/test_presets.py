@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from mqwheel.models.action import WheelAction, WheelActionKind
@@ -197,3 +199,33 @@ def test_default_actions_reference_presets() -> None:
     assert len(actions) == 6
     assert actions[0].preset_id == "lock-screen"
     assert actions[1].preset_id == "screenshot"
+
+
+def test_default_action_paths_stay_absolute_without_env(monkeypatch) -> None:
+    """环境变量缺失时，默认动作里的可执行文件路径也不能变成相对路径。
+
+    `LOCALAPPDATA` / `ProgramFiles` 在从 Git Bash、部分启动器拉起时会**整批缺失**，
+    而 ``os.path.join(os.environ.get(NAME, ""), ...)`` 会拼出一条**相对路径**。
+    它会被写进默认设置并一直错下去，用户点「终端」看到的是「点了没反应」。
+    """
+    from mqwheel.models.action import default_actions
+
+    for name in ("LOCALAPPDATA", "ProgramFiles", "ProgramFiles(x86)"):
+        monkeypatch.delenv(name, raising=False)
+
+    for action in default_actions():
+        if action.kind is WheelActionKind.APPLICATION and os.sep in action.payload:
+            assert os.path.isabs(action.payload), (
+                f"「{action.title}」的路径不是绝对路径：{action.payload}"
+            )
+
+
+def test_wt_path_falls_back_to_bare_name(monkeypatch) -> None:
+    """终端找不到时退回裸 `wt.exe` 交给 PATH，而不是相对路径。"""
+    from mqwheel.models.action import _wt_path
+
+    monkeypatch.setenv("LOCALAPPDATA", r"C:\definitely\not\here")
+    assert _wt_path() == "wt.exe"
+
+    monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    assert _wt_path() == "wt.exe"

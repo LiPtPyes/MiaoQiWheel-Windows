@@ -127,7 +127,7 @@ MiaoQiWheel-Windows/
 │   │                           backdrop / app_icons / autostart / symbol_icons …
 │   ├── controllers/            overlay_controller（呼出、命中、执行）
 │   └── views/                  overlay（轮盘绘制）/ 设置窗口四页 / 通用控件
-├── tests/                      pytest 单元测试（142 项）
+├── tests/                      pytest 单元测试（144 项）
 ├── tools/                      smoke_*.py 自检（离屏渲染 / 打包产物）、图标生成、打包辅助
 ├── scripts/                    setup / run / build 批处理
 └── docs/                       各阶段渲染截图与自测清单

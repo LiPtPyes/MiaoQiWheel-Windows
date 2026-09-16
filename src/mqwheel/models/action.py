@@ -89,6 +89,25 @@ def _edge_path() -> str:
     return candidates[0]
 
 
+_WT_RELATIVE = r"Microsoft\WindowsApps\wt.exe"
+
+
+def _wt_path() -> str:
+    """Windows 终端（wt.exe）的默认路径。
+
+    和 `_edge_path()` 同一类问题：`LOCALAPPDATA` 在从某些宿主拉起时可能缺失，
+    而 ``os.path.join(os.environ.get("LOCALAPPDATA", ""), ...)`` 会得到一个
+    **相对路径** —— 存进默认设置后就一直是错的，用户点「终端」是「点了没反应」。
+    缺失时退回裸 ``wt.exe``，交给系统按 PATH 找。
+    """
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        candidate = os.path.join(local, _WT_RELATIVE)
+        if os.path.exists(candidate):
+            return candidate
+    return "wt.exe"
+
+
 def default_actions() -> list[WheelAction]:
     """全新安装的六个选项，按顺时针排列。前两项直接取自预设库。"""
     from mqwheel.models.presets import by_id  # 延迟导入，避免循环依赖
@@ -127,10 +146,7 @@ def default_actions() -> list[WheelAction]:
             subtitle="Windows 终端",
             symbol="fa6s.terminal",
             kind=WheelActionKind.APPLICATION,
-            payload=os.path.join(
-                os.environ.get("LOCALAPPDATA", ""),
-                r"Microsoft\WindowsApps\wt.exe",
-            ),
+            payload=_wt_path(),
         ),
         WheelAction(
             title="文件资源管理器",
