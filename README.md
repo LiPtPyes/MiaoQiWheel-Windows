@@ -127,7 +127,7 @@ MiaoQiWheel-Windows/
 │   │                           backdrop / app_icons / autostart / symbol_icons …
 │   ├── controllers/            overlay_controller（呼出、命中、执行）
 │   └── views/                  overlay（轮盘绘制）/ 设置窗口四页 / 通用控件
-├── tests/                      pytest 单元测试（140 项）
+├── tests/                      pytest 单元测试（142 项）
 ├── tools/                      smoke_*.py 自检（离屏渲染 / 打包产物）、图标生成、打包辅助
 ├── scripts/                    setup / run / build 批处理
 └── docs/                       各阶段渲染截图与自测清单
@@ -202,6 +202,9 @@ MiaoQiWheel-Windows/
 
 报 Bug 时说明一下操作步骤和现象就够了；如果程序崩溃过，把
 `%APPDATA%\MiaoQiWheel\crash.log` 一起发来，定位会快很多。
+
+> 找不到这个目录的话，看程序里「设置 → 关于 → 数据位置」，那里显示的就是**实际**
+> 配置目录（极少数取不到 `%APPDATA%` 的环境下会回退到 `%USERPROFILE%\.miaoqiwheel\`）。
 
 软件一直免费，也没有广告和内购。如果它帮你省下了一点时间，
 愿意的话可以请我喝杯咖啡 —— 收款码在[官网](https://miaoqi.soft.libolin.space/#contact)上，
