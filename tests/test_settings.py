@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -162,6 +163,39 @@ def test_migrated_settings_are_not_touched_again() -> None:
         }
     )
     assert settings.actions[0].kind == WheelActionKind.APPLICATION
+
+
+def test_config_dir_is_a_single_source_of_truth(monkeypatch, tmp_path) -> None:
+    """设置存储、「关于」页、崩溃日志必须算出同一个配置目录。
+
+    这个逻辑一度被抄了四遍，其中「关于」页那遍是错的：它写的是
+    ``os.environ.get("APPDATA", os.path.expanduser("~"))`` —— 变量存在但为**空串**时
+    ``get`` 返回的是空串而不是默认值，``os.path.join("", APP_ID)`` 会得到一个
+    **相对路径**，于是「关于」页显示的目录和实际写入的目录不是同一个。
+    """
+    from mqwheel.app_identity import config_dir
+    from mqwheel.views.about_page import config_dir_str
+
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    assert config_dir() == tmp_path / "MiaoQiWheel"
+    assert SettingsStore().path.parent == config_dir()
+    assert config_dir_str() == str(config_dir())
+
+
+def test_config_dir_falls_back_when_appdata_missing_or_empty(monkeypatch) -> None:
+    """APPDATA 缺失**或为空串**时都要走兜底，且结果必须是绝对路径。
+
+    实测 Windows 上 ``%APPDATA%`` 在 Git Bash / 精简环境里会**整批缺失**
+    （和 ``%ProgramFiles%`` 一样），此时应用写的是 ``~\\.miaoqiwheel\\``。
+    """
+    from mqwheel.app_identity import config_dir
+
+    monkeypatch.delenv("APPDATA", raising=False)
+    assert config_dir() == Path.home() / ".miaoqiwheel"
+
+    monkeypatch.setenv("APPDATA", "")
+    assert config_dir().is_absolute(), "空串必须走兜底，否则会得到相对路径"
+    assert config_dir() == Path.home() / ".miaoqiwheel"
 
 
 # endregion
