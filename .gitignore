@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 打包产物
+build/
+dist/
+# 被安全删除保护拦下、临时挪开的旧产物目录
+build.stale-*/
+dist.stale-*/
+*.spec
+!MiaoQiWheel.spec
+
+# 日志
+*.log
+
+# 官网的下载包：单个 20+ MB 的二进制，每发一版都会变。
+# 部署是直接把 website/ 目录推给 Cloudflare Pages，不经过 git，
+# 所以这里排除掉只影响仓库体积，不影响线上分发。
+website/downloads/
+
+# 本地工具目录（agent 工作数据、临时脚本、截图）
+.workbuddy-ai/

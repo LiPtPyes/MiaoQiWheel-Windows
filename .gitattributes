@@ -1,0 +1,18 @@
+# 换行符：保证跨平台 clone 后文件形态一致。
+#
+# 本机 core.autocrlf=true，Windows 上检出为 CRLF；但 Linux / macOS 的贡献者
+# clone 下来会是 LF，而 cmd.exe 对 LF 结尾的 .bat 支持并不完全可靠 —— 所以这里
+# 把平台相关的文件显式钉死，其余交给 git 默认行为。
+
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+*.sh    text eol=lf
+
+# 二进制资源：禁止任何换行转换
+*.png   binary
+*.ico   binary
+*.ttf   binary
+*.exe   binary
+*.7z    binary
+*.zip   binary

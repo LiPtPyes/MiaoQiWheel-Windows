@@ -1,0 +1,15 @@
+PySide6-Essentials==6.9.3
+pywin32>=306
+qtawesome>=1.4.2
+pillow>=11.0
+pycaw>=20240210
+pytest>=8.0
+
+# 打包（可选，仅 scripts\build.bat 需要）：
+pyinstaller>=6.0
+
+# 便携版 .7z（可选，tools\make_7z.py 需要）：
+# 注意 build.bat 只跑 make_zip.py，.7z 要单独执行 python tools\make_7z.py。
+# 官网下载用的就是 .7z —— 同样载荷 zip(deflate) 是 33.2 MiB，会超
+# Cloudflare Pages 的 25 MiB 单文件上限，LZMA 压到 23.2 MiB 才放得下。
+py7zr>=1.0

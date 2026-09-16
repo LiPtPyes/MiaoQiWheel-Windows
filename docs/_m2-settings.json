@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "hotkey": {
+    "mode": "hold",
+    "key": "tab",
+    "modifiers": [],
+    "holdMs": 200,
+    "doubleTapMs": 250
+  },
+  "appearance": {
+    "scale": 1.0,
+    "showLabels": true,
+    "blurBackground": true,
+    "animate": true
+  },
+  "general": {
+    "launchAtLogin": false,
+    "showInTaskbar": false
+  },
+  "actions": [
+    {
+      "id": "979e3ff5b2cc4d6398c3d5a3becb1cc8",
+      "title": "动作0",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 0",
+      "presetId": null,
+      "presetParams": null
+    },
+    {
+      "id": "bdb78b5bb9b54c149a2c151cdfc64ef9",
+      "title": "动作1",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 1",
+      "presetId": null,
+      "presetParams": null
+    },
+    {
+      "id": "1e3c9709915d4640898424b2622c1f86",
+      "title": "动作2",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 2",
+      "presetId": null,
+      "presetParams": null
+    },
+    {
+      "id": "bebba24bfc984bf4af364cb4a1797ed1",
+      "title": "动作3",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 3",
+      "presetId": null,
+      "presetParams": null
+    },
+    {
+      "id": "92b76bb6295c42ddbb667a2b1eb53ae0",
+      "title": "动作4",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 4",
+      "presetId": null,
+      "presetParams": null
+    },
+    {
+      "id": "e5e2b67af5c749e5af6569f1d59f0a97",
+      "title": "动作5",
+      "subtitle": "",
+      "symbol": "fa6s.circle",
+      "kind": "shellCommand",
+      "payload": "echo 5",
+      "presetId": null,
+      "presetParams": null
+    }
+  ]
+}

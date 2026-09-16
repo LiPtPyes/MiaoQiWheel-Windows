@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>妙启轮盘 · 按住一个键，呼出你的启动台</title>
+<meta name="description" content="妙启轮盘 MiaoQiWheel for Windows —— 按住一个键呼出轮盘，移动鼠标选择，松开执行。纯本地运行、不联网、不上传任何数据。">
+<link rel="icon" href="assets/img/app.ico">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  /* 同步置位：让 CSS 知道脚本可用，才会启用「先隐藏、进视口再淡入」。
+     脚本被禁用或加载失败时保持内容可见，不会出现空白页。 */
+  document.documentElement.className += " js";
+
+  /* 整屏吸附开关。必须在首帧之前同步定下来，否则页面会先按普通长页面
+     渲染一帧、再跳变成吸附模式，能明显看到闪动。
+     至于什么条件下才真的吸附（桌面宽度 / 窗口够高 / 用户没要求减少动效），
+     全部交给 CSS 的媒体查询判断，这里只负责把类名挂上去 ——
+     免得同一套条件在 JS 和 CSS 里各写一遍，日后改漏一处。 */
+  document.documentElement.className += " snap";
+</script>
+</head>
+<body>
+
+<!-- ═══════════ 背景层：极光 + 噪点 ═══════════ -->
+<div class="bg-layer" aria-hidden="true">
+  <div class="aurora aurora-a"></div>
+  <div class="aurora aurora-b"></div>
+  <div class="aurora aurora-c"></div>
+  <div class="grid-overlay"></div>
+  <div class="noise"></div>
+</div>
+
+<!-- ═══════════ 顶部导航 ═══════════ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#hero">
+      <img src="assets/img/tray.png" alt="" class="brand-logo">
+      <span class="brand-text">妙启轮盘<em>MiaoQiWheel</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#features">特性</a>
+      <a href="#actions">动作库</a>
+      <a href="#gallery">界面</a>
+      <a href="#install">安装</a>
+      <a href="#faq">问答</a>
+    </nav>
+    <a href="#download" class="btn btn-sm btn-primary nav-cta" data-magnet>免费下载</a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════ 侧边滚动指示器 ═══════════ -->
+<aside class="section-dots" id="sectionDots" aria-hidden="true"></aside>
+
+<main>
+
+<!-- ═══════════ 1 · HERO ═══════════ -->
+<section class="section hero" id="hero" data-section="首页" data-dot="home">
+  <div class="wrap hero-wrap">
+    <div class="hero-copy">
+      <div class="pill reveal" data-delay="0">
+        <span class="pill-dot"></span>
+        Windows 10 / 11 · 64 位 · 免费
+      </div>
+
+      <h1 class="hero-title">
+        <span class="line reveal" data-delay="80">按住一个键</span>
+        <span class="line reveal gradient-text" data-delay="160">呼出你的启动台</span>
+      </h1>
+
+      <p class="hero-sub reveal" data-delay="240">
+        <strong>按住 → 移动鼠标 → 松开</strong>，三步完成一次启动。
+        把最常用的动作放在指尖，不用再翻开始菜单、不用记快捷键。
+      </p>
+
+      <div class="hero-actions reveal" data-delay="320">
+        <a href="#download" class="btn btn-primary btn-lg" data-magnet>
+          <span>立即下载</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+        <a href="#features" class="btn btn-ghost btn-lg">
+          <i class="fa-solid fa-circle-play"></i>
+          <span>看看能做什么</span>
+        </a>
+      </div>
+
+      <ul class="hero-facts reveal" data-delay="400">
+        <li><i class="fa-solid fa-shield-halved"></i> 纯本地运行</li>
+        <li><i class="fa-solid fa-wifi fa-fw"></i> 不联网</li>
+        <li><i class="fa-solid fa-feather"></i> 常驻 45~60 MB</li>
+      </ul>
+    </div>
+
+    <div class="hero-visual reveal" data-delay="200">
+      <div class="wheel-stage">
+        <div class="wheel-glow"></div>
+        <canvas id="heroWheel" width="620" height="620" aria-label="妙启轮盘交互演示"></canvas>
+        <div class="wheel-hint" id="wheelHint">
+          <i class="fa-solid fa-hand-pointer"></i>
+          <span>移动鼠标到扇区试试</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="#features" class="scroll-cue" aria-label="向下滚动">
+    <span class="scroll-cue-mouse"><span class="scroll-cue-dot"></span></span>
+    <span class="scroll-cue-text">向下滚动</span>
+  </a>
+</section>
+
+<!-- ═══════════ 2 · 核心特性 ═══════════ -->
+<section class="section" id="features" data-section="特性" data-dot="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">FEATURES</span>
+      <h2 class="sec-title reveal" data-delay="60">为「不用想」而设计</h2>
+      <p class="sec-desc reveal" data-delay="120">
+        每一个细节都在减少一次犹豫：不抢焦点、不打断你手头的事，动作在松开鼠标的瞬间完成。
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <article class="card reveal tilt" data-delay="0">
+        <div class="card-icon"><i class="fa-solid fa-hand-pointer"></i></div>
+        <h3>长按唤出，不误触</h3>
+        <p>
+          默认长按 <kbd>Tab</kbd> 约 0.2 秒呼出。短按仍会补发一次原生 Tab，
+          表单跳格、IDE 缩进全都不受影响 —— 这是它敢占用 Tab 键的前提。
+        </p>
+      </article>
+
+      <article class="card reveal tilt" data-delay="60">
+        <div class="card-icon"><i class="fa-solid fa-crosshairs"></i></div>
+        <h3>松开即执行</h3>
+        <p>
+          鼠标移到哪，哪个扇区就高亮，松手立刻执行。停在盘面正中或按
+          <kbd>Esc</kbd> 可以取消，不会误触发。
+        </p>
+      </article>
+
+      <article class="card reveal tilt" data-delay="120">
+        <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <h3>毛玻璃浮层</h3>
+        <p>
+          呼出时抓取屏幕并做降采样模糊，让轮盘像浮在桌面之上。
+          对性能敏感的机器可一键降为纯色。
+        </p>
+      </article>
+
+      <article class="card reveal tilt" data-delay="180">
+        <div class="card-icon"><i class="fa-solid fa-arrows-up-down-left-right"></i></div>
+        <h3>2~12 项随你排</h3>
+        <p>
+          拖拽调整顺序，或者直接从资源管理器把 <code>.exe</code> / <code>.lnk</code>
+          拖进列表就能加一项。名字、副标题、图标都能改。
+        </p>
+      </article>
+
+      <article class="card reveal tilt" data-delay="240">
+        <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>纯本地，零联网</h3>
+        <p>
+          不请求网络、不上传任何数据。设置存在
+          <code>%APPDATA%\MiaoQiWheel\</code>，采用原子写入，崩溃也不会损坏配置。
+        </p>
+      </article>
+
+      <article class="card reveal tilt" data-delay="300">
+        <div class="card-icon"><i class="fa-solid fa-sliders"></i></div>
+        <h3>顺手的都留了开关</h3>
+        <p>
+          触发方式可换成双击或组合键，长按阈值 150~400 ms 可调，
+          轮盘大小 82%~120%，还能关掉动画、开机自启。
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 3 · 动作库 ═══════════ -->
+<section class="section" id="actions" data-section="动作库" data-dot="actions">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">BUILT-IN ACTIONS</span>
+      <h2 class="sec-title reveal" data-delay="60">24 个系统动作，开箱就能用</h2>
+      <p class="sec-desc reveal" data-delay="120">
+        从锁屏、截图到音量、深色模式，常用操作都已经配好。也可以填入任意命令行，接上你自己的脚本。
+      </p>
+    </div>
+
+    <div class="action-wall" id="actionWall"></div>
+
+    <p class="wall-note reveal">
+      <i class="fa-solid fa-circle-info"></i>
+      图标来自 FontAwesome 6，与软件内显示一致。以上为内置预设，实际可自由增删改。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ 4 · 界面截图 ═══════════ -->
+<section class="section" id="gallery" data-section="界面" data-dot="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">SCREENSHOTS</span>
+      <h2 class="sec-title reveal" data-delay="60">看看它长什么样</h2>
+      <p class="sec-desc reveal" data-delay="120">轮盘本体、扇区高亮与毛玻璃效果，均为程序实际渲染输出。</p>
+    </div>
+
+    <div class="gallery">
+      <figure class="shot reveal" data-delay="0">
+        <div class="shot-frame"><img src="assets/img/m1-wheel.png" alt="轮盘默认状态"></div>
+        <figcaption>呼出轮盘 · 六个扇区环绕</figcaption>
+      </figure>
+      <figure class="shot reveal" data-delay="80">
+        <div class="shot-frame"><img src="assets/img/m1-wheel-selected.png" alt="轮盘选中状态"></div>
+        <figcaption>鼠标移动 · 扇区高亮跟随</figcaption>
+      </figure>
+      <figure class="shot reveal" data-delay="160">
+        <div class="shot-frame"><img src="assets/img/m5-glass.png" alt="毛玻璃背景效果"></div>
+        <figcaption>毛玻璃背景 · 底色透进盘面</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 5 · 原理 / 技术 ═══════════ -->
+<section class="section" id="tech" data-section="原理" data-dot="tech">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">HOW IT WORKS</span>
+      <h2 class="sec-title reveal" data-delay="60">为什么是长按，而不是点按</h2>
+      <p class="sec-desc reveal" data-delay="120">
+        一个键按住不放会经历「按下」和「松开」两个时刻，中间这段时间正好用来选。
+      </p>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal" data-delay="0">
+        <div class="step-num">01</div>
+        <h3>按住</h3>
+        <p>按住主键超过阈值（默认 200 ms），轮盘在鼠标位置浮现。</p>
+      </div>
+      <div class="step-arrow reveal" data-delay="60"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="step reveal" data-delay="120">
+        <div class="step-num">02</div>
+        <h3>移动</h3>
+        <p>鼠标划向哪个扇区，哪个就亮起来，中央实时显示名称与说明。</p>
+      </div>
+      <div class="step-arrow reveal" data-delay="180"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="step reveal" data-delay="240">
+        <div class="step-num">03</div>
+        <h3>松开</h3>
+        <p>松手的那一刻执行动作。停在正中或按 Esc，则视为取消。</p>
+      </div>
+    </div>
+
+    <div class="tech-note reveal" data-delay="300">
+      <i class="fa-solid fa-circle-info"></i>
+      <div>
+        <strong>关于 Tab 键</strong>
+        <p>
+          单独 Tab 如果做成点按即呼出，Tab 就无法再用于表单跳格和 IDE 缩进。
+          所以这里用「长按」区分意图：短按照常生效，长按才唤出轮盘。
+          阈值可在设置里调到 150 ms，几乎无感。也支持双击与组合键触发。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 6 · 下载 ═══════════ -->
+<section class="section" id="download" data-section="下载" data-dot="download">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">DOWNLOAD</span>
+      <h2 class="sec-title reveal" data-delay="60">选一种方式带走它</h2>
+      <p class="sec-desc reveal" data-delay="120">
+        当前版本 <span class="ver-badge" id="verBadge">v1.1.0</span>
+      </p>
+    </div>
+
+    <div class="dl-grid">
+      <article class="dl-card dl-primary reveal tilt" data-delay="0">
+        <div class="dl-ribbon">推荐</div>
+        <div class="dl-head">
+          <div class="dl-icon"><i class="fa-solid fa-file-arrow-down"></i></div>
+          <div>
+            <h3 id="dlInstallerLabel">安装版</h3>
+            <p class="dl-note" id="dlInstallerNote"></p>
+          </div>
+        </div>
+        <ul class="dl-list">
+          <li><i class="fa-solid fa-check"></i> 双击安装，无需任何运行环境</li>
+          <li><i class="fa-solid fa-check"></i> 自动创建开始菜单 / 桌面快捷方式</li>
+          <li><i class="fa-solid fa-check"></i> 卸载时可选择保留个人设置</li>
+          <li><i class="fa-solid fa-check"></i> 免管理员权限即可安装</li>
+        </ul>
+        <a class="btn btn-primary btn-block" id="dlInstaller" data-magnet>
+          <span class="btn-text">下载安装包</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+        <p class="dl-meta" id="dlInstallerMeta"></p>
+      </article>
+
+      <article class="dl-card reveal tilt" data-delay="80">
+        <div class="dl-head">
+          <div class="dl-icon"><i class="fa-solid fa-file-zipper"></i></div>
+          <div>
+            <h3 id="dlPortableLabel">便携版</h3>
+            <p class="dl-note" id="dlPortableNote"></p>
+          </div>
+        </div>
+        <ul class="dl-list">
+          <li><i class="fa-solid fa-check"></i> 解压即用，不写注册表</li>
+          <li><i class="fa-solid fa-check"></i> 可放进 U 盘随身携带</li>
+          <li><i class="fa-solid fa-check"></i> 适合多台机器临时使用</li>
+          <li><i class="fa-solid fa-triangle-exclamation warn"></i> 需整目录解压，单独拷 exe 无法运行</li>
+        </ul>
+        <a class="btn btn-ghost btn-block" id="dlPortable" data-magnet>
+          <span class="btn-text">下载便携版</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+        <p class="dl-meta" id="dlPortableMeta"></p>
+      </article>
+    </div>
+
+    <div class="req-bar reveal" data-delay="160">
+      <div class="req-item">
+        <i class="fa-brands fa-windows"></i>
+        <div><span>系统</span><strong id="reqOs"></strong></div>
+      </div>
+      <div class="req-item">
+        <i class="fa-solid fa-hard-drive"></i>
+        <div><span>磁盘</span><strong id="reqDisk"></strong></div>
+      </div>
+      <div class="req-item">
+        <i class="fa-solid fa-microchip"></i>
+        <div><span>内存</span><strong id="reqMem"></strong></div>
+      </div>
+      <div class="req-item">
+        <i class="fa-solid fa-coins"></i>
+        <div><span>价格</span><strong>免费</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 7 · 安装步骤 ═══════════ -->
+<section class="section" id="install" data-section="安装" data-dot="install">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">GET STARTED</span>
+      <h2 class="sec-title reveal" data-delay="60">三步就能用上</h2>
+    </div>
+
+    <ol class="install-steps">
+      <li class="reveal" data-delay="0">
+        <span class="is-index">1</span>
+        <h3>下载并安装</h3>
+        <p>下载安装包后双击运行，一路下一步即可。装完会自动启动，托盘出现图标就成功了。</p>
+      </li>
+      <li class="reveal" data-delay="80">
+        <span class="is-index">2</span>
+        <h3>按住 Tab 试试</h3>
+        <p>在任意界面按住 <kbd>Tab</kbd> 约 0.2 秒，轮盘会在鼠标位置浮现。</p>
+      </li>
+      <li class="reveal" data-delay="160">
+        <span class="is-index">3</span>
+        <h3>右键托盘去定制</h3>
+        <p>托盘图标右键 →「打开设置」，把自己常用的软件拖进列表，换成顺手的样子。</p>
+      </li>
+    </ol>
+
+    <div class="callout reveal" data-delay="220">
+      <i class="fa-solid fa-lightbulb"></i>
+      <p>
+        <strong>小技巧：</strong>不需要的功能可以关掉。在「通用」里能把触发方式改成双击或组合键，
+        也可以调整轮盘大小；对性能敏感就把毛玻璃关掉，换成纯色更轻快。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 8 · FAQ ═══════════ -->
+<section class="section" id="faq" data-section="问答" data-dot="faq">
+  <div class="wrap wrap-narrow">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">FAQ</span>
+      <h2 class="sec-title reveal" data-delay="60">常见问题</h2>
+    </div>
+
+    <div class="faq-list">
+      <details class="faq reveal" data-delay="0">
+        <summary>
+          <span>长按 Tab 没反应怎么办？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            最常见的原因是当前有<strong>以管理员权限运行</strong>的程序在前台。
+            Windows 的用户界面特权隔离（UIPI）会让这类程序截获键盘钩子，
+            导致轮盘收不到信号。解决办法是用普通权限重启相关程序，
+            或者在设置里换一个主键（<kbd>Caps Lock</kbd> 之类的左手单键更好按）。
+          </p>
+        </div>
+      </details>
+
+      <details class="faq reveal" data-delay="40">
+        <summary>
+          <span>图标显示成空心圆是怎么回事？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            通常是便携版没有完整解压 —— 图标字体是随包分发的，
+            必须<strong>解压整个目录</strong>。单独把 <code>MiaoQiWheel.exe</code>
+            拷出来是跑不起来的，重新完整解压一次即可。
+          </p>
+        </div>
+      </details>
+
+      <details class="faq reveal" data-delay="80">
+        <summary>
+          <span>会联网吗？会上传我的数据吗？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            不会。程序<strong>不发起任何网络请求</strong>，所有配置都保存在本机
+            <code>%APPDATA%\MiaoQiWheel\settings.json</code>。
+            即便断电或崩溃，配置也是原子写入的，不会写坏。
+          </p>
+        </div>
+      </details>
+
+      <details class="faq reveal" data-delay="120">
+        <summary>
+          <span>能放自己的程序吗？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            可以。直接把 <code>.exe</code> 或 <code>.lnk</code> 从资源管理器
+            拖进设置里的列表就行。也可以选择「命令」类型，填入任意命令行，
+            接自己的脚本。轮盘支持 2 到 12 个选项。
+          </p>
+        </div>
+      </details>
+
+      <details class="faq reveal" data-delay="160">
+        <summary>
+          <span>多显示器或系统缩放 125% 下位置不对？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            请先确认用的是最新版本。如果仍然异常，可以在设置里关闭毛玻璃背景试试
+            —— 该效果依赖屏幕内容抓取，在部分缩放组合下需要单独适配。
+            问题依旧的话，把 <code>%APPDATA%\MiaoQiWheel\crash.log</code> 反馈给我们。
+          </p>
+        </div>
+      </details>
+
+      <details class="faq reveal" data-delay="200">
+        <summary>
+          <span>开机自启没生效？</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="faq-body">
+          <p>
+            去设置里把「开机时自动启动」关掉再打开一次。
+            然后可以在「任务管理器 → 启动」里看到「MiaoQiWheel」这一项，
+            确认它处于启用状态。
+          </p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 9 · 收尾 CTA ═══════════ -->
+<section class="section cta-final" data-section="开始使用" data-dot="cta">
+  <div class="wrap">
+    <div class="cta-box reveal">
+      <div class="cta-glow"></div>
+      <h2>把它带走，明天就开始用</h2>
+      <p>免费、纯本地，装完大约一分钟就能上手。</p>
+      <div class="cta-actions">
+        <a href="#download" class="btn btn-primary btn-lg" data-magnet>
+          <span>前往下载</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+        <a href="#faq" class="btn btn-ghost btn-lg">先看常见问题</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════ 页脚 ═══════════ -->
+<footer class="footer">
+  <div class="wrap footer-wrap">
+    <div class="footer-brand">
+      <img src="assets/img/tray.png" alt="" class="brand-logo">
+      <div>
+        <strong>妙启轮盘 MiaoQiWheel</strong>
+        <span>for Windows · v<span id="verFoot">1.1.0</span></span>
+      </div>
+    </div>
+
+    <div class="footer-meta">
+      <p>
+        技术栈：Python 3.13 + PySide6（Qt 6）+ Win32 API。
+        本项目为个人学习用途的移植实现，非官方版本，灵感与交互设计来自 macOS 版妙启轮盘。
+      </p>
+      <p class="footer-credits">
+        致谢：
+        <a href="https://doc.qt.io/qtforpython/" target="_blank" rel="noopener">Qt for Python (PySide6)</a> · LGPL v3 ·
+        <a href="https://github.com/spyder-ide/qtawesome" target="_blank" rel="noopener">QtAwesome / FontAwesome 6</a> · CC BY 4.0 ·
+        <a href="https://github.com/AndreMiras/pycaw" target="_blank" rel="noopener">pycaw</a> · MIT
+      </p>
+      <p class="footer-links" id="footerLinks"></p>
+    </div>
+  </div>
+</footer>
+
+<!-- 返回顶部 -->
+<button class="to-top" id="toTop" aria-label="返回顶部">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<script src="site.config.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
