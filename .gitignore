@@ -21,5 +21,9 @@ dist.stale-*/
 # 所以这里排除掉只影响仓库体积，不影响线上分发。
 website/downloads/
 
+# 自检脚本的工作文件：tools/smoke_m2.py 每次运行都会往这里写一份设置，
+# 里面的动作 id 是随机 UUID，提交进来只会让每次自检都产生无意义的 diff。
+docs/_m2-settings.json
+
 # 本地工具目录（agent 工作数据、临时脚本、截图）
 .workbuddy-ai/
