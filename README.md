@@ -128,7 +128,7 @@ MiaoQiWheel-Windows/
 │   ├── controllers/            overlay_controller（呼出、命中、执行）
 │   └── views/                  overlay（轮盘绘制）/ 设置窗口四页 / 通用控件
 ├── tests/                      pytest 单元测试（140 项）
-├── tools/                      smoke_*.py 渲染自检、图标生成、打包辅助
+├── tools/                      smoke_*.py 自检（离屏渲染 / 打包产物）、图标生成、打包辅助
 ├── scripts/                    setup / run / build 批处理
 └── docs/                       各阶段渲染截图与自测清单
 ```
@@ -144,6 +144,18 @@ MiaoQiWheel-Windows/
 .venv\Scripts\python.exe tools\hotkey_probe.py selftest   :: 热键端到端自检
 .venv\Scripts\python.exe tools\smoke_m3.py      :: 23 个预设图标有效性
 ```
+
+打包产物自检（跑 `scripts\build.bat` 之后）：
+
+```bat
+.venv\Scripts\python.exe tools\smoke_dist_icons.py  :: 打包目录里的字体够不够用（不启动 exe，任何时候可跑）
+.venv\Scripts\python.exe tools\smoke_dist.py        :: 启动真实 exe：托盘 / 内存 / 单实例 / 写配置
+```
+
+> `smoke_dist.py` 需要一个独占的实例。如果托盘里已经有妙启轮盘在跑（安装版或上次自检残留），
+> 它会检测到单实例互斥量被占用，自动退化成「只验证打包产物能否启动」并返回退出码 2
+> （`DIST-SMOKE-PARTIAL-PASS`）—— 那说明引导链和依赖是完整的，只是环境不干净。
+> 想看完整结果就先退出托盘实例再重跑。不想退出的话，`smoke_dist_icons.py` 不受影响。
 
 调试开关（环境变量）：
 
