@@ -11,13 +11,6 @@
   /* 同步置位：让 CSS 知道脚本可用，才会启用「先隐藏、进视口再淡入」。
      脚本被禁用或加载失败时保持内容可见，不会出现空白页。 */
   document.documentElement.className += " js";
-
-  /* 整屏吸附开关。必须在首帧之前同步定下来，否则页面会先按普通长页面
-     渲染一帧、再跳变成吸附模式，能明显看到闪动。
-     至于什么条件下才真的吸附（桌面宽度 / 窗口够高 / 用户没要求减少动效），
-     全部交给 CSS 的媒体查询判断，这里只负责把类名挂上去 ——
-     免得同一套条件在 JS 和 CSS 里各写一遍，日后改漏一处。 */
-  document.documentElement.className += " snap";
 </script>
 </head>
 <body>
@@ -44,6 +37,7 @@
       <a href="#gallery">界面</a>
       <a href="#install">安装</a>
       <a href="#faq">问答</a>
+      <a href="#contact">反馈</a>
     </nav>
     <a href="#download" class="btn btn-sm btn-primary nav-cta" data-magnet>免费下载</a>
     <button class="nav-toggle" id="navToggle" aria-label="菜单">
@@ -460,7 +454,8 @@
           <p>
             请先确认用的是最新版本。如果仍然异常，可以在设置里关闭毛玻璃背景试试
             —— 该效果依赖屏幕内容抓取，在部分缩放组合下需要单独适配。
-            问题依旧的话，把 <code>%APPDATA%\MiaoQiWheel\crash.log</code> 反馈给我们。
+            问题依旧的话，把 <code>%APPDATA%\MiaoQiWheel\crash.log</code> 发到
+            <a href="mailto:1360722205@qq.com">1360722205@qq.com</a> 即可。
           </p>
         </div>
       </details>
@@ -482,7 +477,63 @@
   </div>
 </section>
 
-<!-- ═══════════ 9 · 收尾 CTA ═══════════ -->
+<!-- ═══════════ 9 · 反馈与支持 ═══════════ -->
+<section class="section" id="contact" data-section="反馈" data-dot="contact">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker reveal">FEEDBACK &amp; SUPPORT</span>
+      <h2 class="sec-title reveal" data-delay="60">反馈与支持</h2>
+      <p class="sec-desc reveal" data-delay="120">
+        遇到问题、想要个新动作，或者只是想聊两句，都可以直接找我 —— 邮件我一定会看。
+      </p>
+    </div>
+
+    <div class="contact-grid">
+      <article class="contact-card reveal tilt" data-delay="0">
+        <div class="contact-icon"><i class="fa-solid fa-bug"></i></div>
+        <h3>反馈 Bug</h3>
+        <p>
+          说明一下当时的操作和现象就够了。如果程序崩溃过，把
+          <code>%APPDATA%\MiaoQiWheel\crash.log</code> 一起发来，定位会快很多。
+        </p>
+        <a class="contact-link" href="mailto:1360722205@qq.com">
+          <i class="fa-solid fa-envelope"></i>
+          <span>1360722205@qq.com</span>
+        </a>
+      </article>
+
+      <article class="contact-card reveal tilt" id="contactGithubCard" data-delay="80">
+        <div class="contact-icon"><i class="fa-brands fa-github"></i></div>
+        <h3>提建议 / 看源码</h3>
+        <p>
+          想要的动作、想改的交互，开个 Issue 说一声就行。源码、更新记录与已知问题都在仓库里。
+        </p>
+        <a class="contact-link" id="contactRepo" target="_blank" rel="noopener">
+          <i class="fa-brands fa-github"></i>
+          <span>项目仓库</span>
+        </a>
+      </article>
+    </div>
+
+    <!-- 赞赏码：图片加载成功才显示，没放图就整块隐藏（见 main.js 的 initDonate）。
+         图放到 website/assets/img/donate.png 即可，不需要改代码。 -->
+    <div class="donate" id="donateBox">
+      <div class="donate-copy">
+        <h3><i class="fa-solid fa-mug-hot"></i> 请我喝杯咖啡</h3>
+        <p>
+          软件一直免费，也没有广告、没有内购。如果它帮你省下了一点时间，
+          愿意的话可以扫个码请我喝杯咖啡 —— 完全自愿，不扫也照样能用全部功能。
+        </p>
+      </div>
+      <figure class="donate-qr">
+        <img id="donateQr" src="assets/img/donate.png" alt="赞赏码" width="196" height="196">
+        <figcaption>扫码请我喝杯咖啡</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 10 · 收尾 CTA ═══════════ -->
 <section class="section cta-final" data-section="开始使用" data-dot="cta">
   <div class="wrap">
     <div class="cta-box reveal">

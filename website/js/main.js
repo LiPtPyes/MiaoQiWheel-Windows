@@ -3,6 +3,7 @@
    1) Hero 交互轮盘（Canvas 复刻软件内的六扇区绘制）
    2) 动作库图标墙（FontAwesome 6）
    3) 滚动揭示 / 导航高亮 / 3D 倾斜 / 下载按钮接线
+   4) 反馈与支持（仓库链接、赞赏码按需显示）
    ══════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -554,6 +555,53 @@
   }
 
   /* ════════════════════════════════════════════
+     8 · 反馈与支持
+     ════════════════════════════════════════════ */
+
+  /* 仓库按钮的地址与文案都取自 site.config.js，没配就把整张卡藏掉 ——
+     留一张写着「看源码」却没有链接的卡，比不显示更让人困惑。 */
+  function initContact() {
+    const repo = document.getElementById("contactRepo");
+    if (!repo) return;
+    const url = (CFG.feedback && CFG.feedback.github) || "";
+    if (!url) {
+      const card = document.getElementById("contactGithubCard");
+      if (card) card.style.display = "none";
+      return;
+    }
+    repo.href = url;
+    /* 按钮上只留 owner/repo，完整 URL 太长会把药丸撑破 */
+    const label = repo.querySelector("span");
+    if (label) {
+      const short = url.replace(/^https?:\/\/(?:www\.)?github\.com\//i, "").replace(/\/+$/, "");
+      label.textContent = short || "项目仓库";
+    }
+  }
+
+  /* 赞赏码：图片真的加载出来才显示整块。
+     收款码是后补的，没放之前 assets/img/donate.png 会 404，
+     靠 load / error 两个事件决定显隐，访客不会看到裂图或空框。
+     以后换码只要覆盖同名文件，不需要动代码。 */
+  function initDonate() {
+    const box = document.getElementById("donateBox");
+    const img = document.getElementById("donateQr");
+    if (!box || !img) return;
+
+    function show() { box.classList.add("is-ready"); }
+
+    /* 图片可能在本脚本执行前就已经加载完（缓存命中）或已经失败（404），
+       这两种情况都不会再触发事件，必须先按 complete 判定一次。 */
+    if (img.complete) {
+      if (img.naturalWidth > 0) show();
+      return;
+    }
+    img.addEventListener("load", show);
+    img.addEventListener("error", function () {
+      box.classList.remove("is-ready");
+    });
+  }
+
+  /* ════════════════════════════════════════════
      启动
      ════════════════════════════════════════════ */
   function boot() {
@@ -576,11 +624,17 @@
     initMagnet();
     initDownloads();
     initFooterLinks();
+    initContact();
+    initDonate();
 
     if (shot) {
       var target = document.querySelector(shot);
       if (target) {
-        target.scrollIntoView({ behavior: "auto", block: "start" });
+        /* 必须显式写 instant。CSS 里有 html { scroll-behavior: smooth }，
+           而 scrollIntoView 的 behavior: "auto" 含义是「交给容器的 scroll-behavior
+           决定」，于是这里会变成平滑滚动 —— 无头截图在滚动动画跑完前就拍下了，
+           拍到的还是页面顶部。之前用 ?shot= 出图一直不生效就是这个原因。 */
+        target.scrollIntoView({ behavior: "instant", block: "start" });
       }
     }
   }

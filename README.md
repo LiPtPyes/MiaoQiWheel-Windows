@@ -175,11 +175,29 @@ MiaoQiWheel-Windows/
 | 图标是空心圆 | 未完整解压；重新解压整个 zip（FontAwesome 字体随包分发） |
 | 轮盘位置/大小异常 | 多屏或 125%/150% 缩放场景：确认用的是最新版，仍异常可关闭毛玻璃后反馈 |
 | 开机自启不生效 | 设置里重新开关一次；任务管理器 → 启动 中应有「MiaoQiWheel」 |
-| 崩溃 | 把 `%APPDATA%\MiaoQiWheel\crash.log` 发给开发者 |
+| 崩溃 | 把 `%APPDATA%\MiaoQiWheel\crash.log` 发到 1360722205@qq.com |
 
 ---
 
-## 八、许可与致谢
+## 八、反馈与联系
+
+遇到 Bug、想要新动作，或者只是想聊两句，都可以直接找我：
+
+| 渠道 | 地址 | 适合 |
+|---|---|---|
+| 邮箱 | [1360722205@qq.com](mailto:1360722205@qq.com) | Bug 反馈、私信 |
+| GitHub Issues | [LiPtPyes/MiaoQiWheel-Windows](https://github.com/LiPtPyes/MiaoQiWheel-Windows/issues) | 功能建议、公开讨论 |
+
+报 Bug 时说明一下操作步骤和现象就够了；如果程序崩溃过，把
+`%APPDATA%\MiaoQiWheel\crash.log` 一起发来，定位会快很多。
+
+软件一直免费，也没有广告和内购。如果它帮你省下了一点时间，
+愿意的话可以请我喝杯咖啡 —— 收款码在[官网](https://miaoqi.soft.libolin.space/#contact)上，
+完全自愿，不扫也照样能用全部功能。
+
+---
+
+## 九、许可与致谢
 
 本项目使用 [MIT License](LICENSE)。
 

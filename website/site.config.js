@@ -27,10 +27,11 @@ window.SITE_CONFIG = {
     },
   },
 
-  // 页脚的反馈入口，留空则不显示该链接
+  // 反馈入口：页脚链接 + 页面里「反馈与支持」区块的仓库按钮都读这里。
+  // email 同时出现在页脚和 FAQ 的排查建议里；github 为空时整张「看源码」卡会隐藏。
   feedback: {
-    email: "",
-    github: "",
+    email: "1360722205@qq.com",
+    github: "https://github.com/LiPtPyes/MiaoQiWheel-Windows",
   },
 
   requirements: {

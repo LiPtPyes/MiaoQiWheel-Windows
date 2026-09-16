@@ -146,11 +146,25 @@ i[class*="fa-brands"]::before { font-family: "FontAwesome6Brands"; font-weight: 
 
 /* ══════════ 图标码位 ══════════
    全部从 fa6-solid.ttf / fa6-brands.ttf 的 cmap 反查生成，勿手写：
-   手写极易记错（例如 folder 实为 F114，F07B 是另一个图标）。 */
+   手写极易记错（例如 folder 实为 F114，F07B 是另一个图标）。
+
+   ⚠ 这里是一张**白名单**：在 index.html 里写 <i class="fa-solid fa-xxx"> 时，
+   必须同时在下面加一条 .fa-xxx::before，否则那个图标不会变成方块，而是**整个消失**
+   —— 只剩一个空的占位框，很难一眼看出是漏了配置。（「反馈与支持」的 fa-bug
+   就这么漏过一次。）
+
+   核对办法（字体和 qtawesome 里的 FA 6.7.2 是同一份，可直接查它的码表）：
+       import json, pathlib, qtawesome
+       p = next(pathlib.Path(qtawesome.__file__).parent.rglob(
+           "fontawesome6-solid-webfont-charmap-6.7.2.json"))
+       print(json.loads(p.read_text(encoding="utf-8"))["bug"])   # -> f188
+   注意 FA6 字体里保留了大量 FA5 旧名/旧码位作为别名（如 f29c 与 f059 是同一个
+   问号图标），所以「码表里查不到」不等于渲染不出来，以实际字形为准。 */
 .fa-arrow-down::before { content: "\f063"; }
 .fa-arrow-right::before { content: "\f061"; }
 .fa-arrow-up::before { content: "\f062"; }
 .fa-arrows-up-down-left-right::before { content: "\f047"; }
+.fa-bug::before { content: "\f188"; }
 .fa-check::before { content: "\f00c"; }
 .fa-chevron-down::before { content: "\f078"; }
 .fa-circle-info::before { content: "\f05a"; }
@@ -167,6 +181,7 @@ i[class*="fa-brands"]::before { font-family: "FontAwesome6Brands"; font-weight: 
 .fa-layer-group::before { content: "\f5fd"; }
 .fa-lightbulb::before { content: "\f0eb"; }
 .fa-microchip::before { content: "\f2db"; }
+.fa-mug-hot::before { content: "\f7b6"; }
 .fa-shield-halved::before { content: "\f3ed"; }
 .fa-sliders::before { content: "\f1de"; }
 .fa-triangle-exclamation::before { content: "\f071"; }
@@ -1107,6 +1122,104 @@ i[class*="fa-brands"]::before { font-family: "FontAwesome6Brands"; font-weight: 
 }
 .faq-body strong { color: var(--text); }
 
+/* ══════════ 反馈与支持 ══════════ */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+.contact-card {
+  position: relative;
+  padding: 30px 30px 28px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.42s var(--ease), border-color 0.42s, box-shadow 0.42s;
+  transform-style: preserve-3d;
+}
+.contact-card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-lg); }
+.contact-icon {
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 18px;
+  color: var(--accent-lite);
+  background: rgba(61, 139, 253, 0.12);
+  border: 1px solid rgba(61, 139, 253, 0.26);
+  margin-bottom: 16px;
+}
+.contact-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 9px; }
+.contact-card p { font-size: 14.5px; color: var(--text-soft); line-height: 1.62; }
+.contact-card p code { font-size: 13px; color: var(--text); }
+/* 联系方式做成药丸按钮，比裸文本好点、也更醒目 */
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 20px;
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-lite);
+  background: rgba(61, 139, 253, 0.1);
+  border: 1px solid rgba(61, 139, 253, 0.24);
+  transition: background 0.3s, border-color 0.3s, color 0.3s, transform 0.3s var(--ease);
+}
+.contact-link:hover {
+  background: rgba(61, 139, 253, 0.2);
+  border-color: rgba(61, 139, 253, 0.46);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ── 赞赏码 ──
+   默认 display: none，只有图片真的加载成功、由 JS 加上 .is-ready 才显示。
+   没放图的时候整块不占位，访客不会看到一个空框或裂图。 */
+.donate {
+  display: none;
+  margin-top: 20px;
+  padding: 30px 34px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(139, 92, 246, 0.07), rgba(255,255,255,0.015));
+  border: 1px solid var(--border);
+  gap: 34px;
+}
+.donate.is-ready {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.donate-copy { flex: 1 1 320px; }
+.donate-copy h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.donate-copy h3 i { color: var(--violet); }
+.donate-copy p { font-size: 14.5px; color: var(--text-soft); line-height: 1.62; }
+/* 二维码必须有浅底才扫得出来，所以这里刻意用白卡片而不是玻璃面板 */
+.donate-qr {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 13px 9px;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
+}
+.donate-qr img { width: 196px; height: 196px; object-fit: contain; }
+.donate-qr figcaption { font-size: 12px; color: #4a5160; }
+
 /* ══════════ 收尾 CTA ══════════ */
 .cta-final { padding-bottom: 140px; }
 .cta-box {
@@ -1287,6 +1400,11 @@ html.js .hero .reveal { transition-duration: 1s; }
   .action-item span { font-size: 11.5px; }
   .cta-box { padding: 50px 22px; }
   .dl-card, .card, .step { padding: 26px 22px; }
+  .contact-card { padding: 26px 22px; }
+  /* 赞赏码：窄屏让二维码占满整行、居中，别跟文字挤在一起 */
+  .donate.is-ready { padding: 26px 22px; gap: 24px; justify-content: center; }
+  .donate-qr { width: 100%; }
+  .donate-qr img { width: 170px; height: 170px; }
   .scroll-cue { display: none; }
   .to-top { right: 18px; bottom: 20px; }
 }
@@ -1303,110 +1421,48 @@ html.js .hero .reveal { transition-duration: 1s; }
 }
 
 /* ══════════════════════════════════════════════════════════
-   整屏分页（fullpage 式滚动吸附）
+   整屏分页（fullpage 式滚动吸附）—— 已移除
    ──────────────────────────────────────────────────────────
-   用原生 scroll-snap 实现，不引入 fullpage.js —— 那套库会劫持滚轮事件，
-   触控板上很难受。
+   这里原本是一套基于原生 scroll-snap 的「一屏一区块」实现：给 html 挂
+   `.snap`，区块固定 height: 100svh，配 scroll-snap-type: y mandatory。
 
-   地基是这一句：**每个区块固定一屏高**。吸附点之间的距离恒等于一屏，
-   一次滚轮就正好翻一屏，跟区块里有多少内容、窗口有多高都没关系。
+   实测下来体验并不好，已整体删除，恢复成普通长页面滚动。踩过的坑记在这里，
+   免得日后又想起来「加个翻页效果」：
 
-   之前走过两条弯路，都留在这里免得再犯：
+   ① 吸附点之间要恒定一屏，就必须让区块固定高度；可一旦有区块的内容超过
+      一屏，mandatory 就会把停在它内部的人拽到最近的吸附点 —— 实测滚到
+      5600 被拽回 4527，一次倒退 1073px。
+   ② 改成「发现区块超出就整体降级成 proximity」等于把翻页关掉：1080p 屏在
+      Windows 125% 缩放下可视高度正好 864px，恰好有一个区块超出，于是强制
+      翻页在那块屏幕上永远不生效。
+   ③ 正解是让超出的内容在区块内部滚动（fullpage.js 的 scrollOverflow 就是
+      这么做），但那又引入了嵌套滚动容器：滚轮要先把内层滚到底才肯翻页，
+      触控板上尤其别扭，还得额外藏掉内部滚动条以免正文宽度比邻居窄 17px。
 
-   ① 区块高度跟着内容走（只给 min-height: 100svh）。只要有区块比视口高，
-      mandatory 就会把停在它内部的人拽到最近的吸附点 —— 实测滚到 5600
-      被拽回 4527，一次倒退 1073px。当时的补救是「发现区块超出就整体降级
-      成 proximity」，但那等于把翻页关掉：1080p 屏在 Windows 125% 缩放下
-      可视高度正好 864px，恰好有一个区块超出，于是强制翻页在那块屏幕上
-      永远不生效。
-   ② 正确做法是让超出的内容在**区块内部**滚动（fullpage.js 的
-      scrollOverflow 就是这么做）。内容再高也撑不破一屏，吸附点之间的
-      距离依旧恒定。
-
-   区块的 130px 上内边距一律保留 —— 那是整体疏密节奏的基准。
-   下内边距在吸附模式下收到 90px：9 个区块里最高的正文是 629px，
-   864px 高的窗口按 130/130 会超出 25px，白让用户多滚一下滚轮。
-
-   html 上的 .snap 类由 <head> 里的同步脚本添加（必须在首帧之前定下来，
-   否则会先按普通长页面渲染一帧再跳变成吸附模式，能明显看到闪动）。
-   至于「什么条件下才真的吸附」全部交给下面这个媒体查询判断，
-   不在 JS 里重复一遍。
+   一句话：为了「一次滚轮翻一屏」付出了三层补丁，换来的手感还不如正常滚动。
    ══════════════════════════════════════════════════════════ */
-
-/* 只在「桌面宽度 + 窗口够高 + 用户没有要求减少动效」时启用。
-   整段都放进媒体查询、而不是写在外面再逐个还原，是为了避免属性漏出去
-   污染小屏样式：比如 720px 断点下的 .section { padding: 84px 0 } 会被
-   权重更高的 html.snap .section 盖掉，小屏的内边距就悄悄变了。 */
-@media (min-width: 1025px) and (min-height: 561px) and (prefers-reduced-motion: no-preference) {
-
-  html.snap {
-    /* 吸附模式下不要 scroll-padding：区块要正好贴满视口。
-       顶部导航是半透明悬浮条，区块自身的 130px 内边距足够让开它。 */
-    scroll-padding-top: 0;
-    scroll-snap-type: y mandatory;
-  }
-
-  html.snap .section {
-    /* 固定一屏高 —— 整套方案的地基，不要改成 min-height */
-    height: 100vh;
-    height: 100svh;
-    padding-bottom: 90px;
-
-    /* 内容真的超过一屏时（窗口矮于约 810px），在区块内部滚动兜底。
-       x 轴必须显式收掉：只写 overflow-y 的话，overflow-x 会从 visible
-       计算成 auto，区块就成了横向滚动容器，装饰元素一不小心就顶出横向滚动条。 */
-    overflow-x: hidden;
-    overflow-x: clip;
-    overflow-y: auto;
-
-    /* 藏掉内部滚动条。它只在少数区块、且只在矮窗口下出现，
-       留着会让那几个区块的正文比邻居窄 17px，一眼能看出错位。
-       这层滚动是保险丝，不是主要交互，藏起来不影响正常使用。 */
-    scrollbar-width: none;
-
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-  html.snap .section::-webkit-scrollbar { width: 0; height: 0; }
-
-  /* 内容不足一屏的区块垂直居中，让空白均分在上下两侧。
-     用 safe center：内容万一真超过一屏，退回顶部对齐 ——
-     普通的 center 会让超出部分从**上方**溢出，而上方是滚不到的，内容就丢了。 */
-  html.snap .section:not(.hero) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    justify-content: safe center;
-  }
-  /* 块级子元素本来会撑满整行；换成 flex 之后会被 auto margin 顶成内容宽，
-     这里显式补回来，保证 .wrap 的排版和以前完全一致。 */
-  html.snap .section:not(.hero) > .wrap { width: 100%; }
-
-  /* .hero 是横向 flex + align-items: center。窗口很矮时内容会高出容器，
-     普通的 center 会让超出部分从上方溢出，而上方是滚不到的，顶部文字就丢了。
-     safe center 在放不下时自动退回顶部对齐。 */
-  html.snap .hero { align-items: safe center; }
-  /* .hero 本身就是横向 flex + align-items: center，交给它自己居中 */
-
-  /* 页脚不是 .section，得单独给一个吸附点，
-     否则 mandatory 模式下它永远滚不到（会被最后一个区块吸回去） */
-  html.snap .footer {
-    scroll-snap-align: end;
-  }
-}
 
 /* ══════════════════════════════════════════════════════════
-   紧凑化：让「特性 / 界面 / 下载」三个区块能装进一屏
+   紧凑化：把正文压得更紧一些
    ──────────────────────────────────────────────────────────
-   吸附模式下区块固定一屏高，正文超出就只能在区块内部滚动
-   —— 能用，但要多一次滚轮才翻页。把正文压进一屏，翻页手感最干净。
-   1440×900 下原本超出的量：特性 +120、界面 +257、下载 +85。
-   压缩手段只有两类：收紧间距与字号、删减内容。**区块本身的 130px 内边距
-   一律不动**，那是整体疏密节奏的基准，动了就会像之前那样整体走样。
+   这一组原本是为整屏吸附服务的：区块固定一屏高，正文超出就只能在区块内部
+   滚动，所以要尽量把正文压进 864px（1440×900 在 Windows 125% 缩放下的
+   可视高度）。1440×900 下原本超出的量：特性 +120、界面 +257、下载 +85。
 
-   这些规则刻意放在文件最末：选择器与原始规则同级，靠书写顺序覆盖，
-   不靠提高权重，这样以后改原始规则时行为仍然可预期。
+   吸附已经整体去掉，这些值**有意保留**：压紧之后每屏能看到的完整信息更多、
+   总滚动距离更短，在普通长页面上同样成立。区块本身的 130px 内边距一律不动，
+   那是整体疏密节奏的基准。
+
+   想回到更松的原始间距（.sec-head 62px、.card 30px 28px、.feature-grid 20px），
+   把下面这一组覆盖删掉即可 —— 它们刻意放在文件最末，选择器与原始规则同级，
+   靠书写顺序覆盖，不靠提高权重，这样以后改原始规则时行为仍然可预期。
+
+   ⚠ 必须整段套在 min-width: 721px 里。这些规则写在文件最末、权重与原始规则
+   相同，靠书写顺序生效；一旦漏出去，就会盖掉 720px 断点里的移动端间距
+   （.sec-head 42px、.card 26px 22px），小屏上悄悄变紧 —— 而且因为「文件末尾
+   的覆盖」不容易联想到移动端，这种问题极难排查。
    ══════════════════════════════════════════════════════════ */
+@media (min-width: 721px) {
 
 /* 标题区下沿收紧，四个区块都受益 */
 .sec-head { margin-bottom: 34px; }
@@ -1433,3 +1489,5 @@ html.js .hero .reveal { transition-duration: 1s; }
 .dl-list li { line-height: 1.5; }
 .dl-meta { margin-top: 9px; }
 .req-item { padding: 14px 18px; }
+
+}  /* /min-width: 721px 紧凑化 */
