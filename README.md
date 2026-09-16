@@ -5,6 +5,23 @@
 
 技术栈：Python 3.13 + PySide6（Qt 6）+ Win32 API（ctypes）。
 
+## 界面预览
+
+| 轮盘 | 选中项 | 毛玻璃背景 |
+|---|---|---|
+| ![轮盘](docs/m1-wheel.png) | ![选中项](docs/m1-wheel-selected.png) | ![毛玻璃](website/assets/img/m5-glass.png) |
+
+| 呼出并命中 | 轮盘选项 | 通用设置 |
+|---|---|---|
+| ![呼出并命中](docs/m2-wheel-active.png) | ![轮盘选项](docs/m4-actions.png) | ![通用设置](docs/m4-general.png) |
+
+> 上面这几张都由 `tools/` 下的自检脚本离屏渲染产出（`smoke_wheel.py`、`smoke_m2.py`、
+> `shot_glass.py`、`smoke_m4.py`），不是手工截屏，所以改动界面后重跑脚本即可更新。
+>
+> ⚠ 毛玻璃配图用的是 `website/assets/img/m5-glass.png`（`tools/shot_glass.py --gradient`
+> 产出）。**不要改用 `docs/m5-glass.png`** —— 那个文件是 `tools/smoke_m5.py` 的像素断言
+> 夹具，底图是现生成的洋红条纹测试图案，长得像个莫名其妙的紫色轮盘。
+
 ---
 
 ## 一、快速开始

@@ -44,8 +44,20 @@ def render(selected: int | None, output: Path) -> None:
 
     host.show()
     app.processEvents()
-    host.grab().save(str(output))
-    print(f"已保存 {output}（selected={selected}）")
+    shot = host.grab()
+    # 空白守卫：轮盘本体是半透明绘制的，一旦宿主底色没铺上、或入场动画的 reveal
+    # 还停在 0（painter.setOpacity(0)），截出来就是一张纯色图，肉眼在缩略图里根本
+    # 看不出来。这里按颜色数做断言，宁可让自检失败也不要提交空白截图。
+    image = shot.toImage()
+    distinct = {
+        image.pixel(x, y)
+        for y in range(0, image.height(), 5)
+        for x in range(0, image.width(), 5)
+    }
+    if len(distinct) <= 20:
+        raise SystemExit(f"渲染结果疑似空白：{output} 只有 {len(distinct)} 种颜色")
+    shot.save(str(output))
+    print(f"已保存 {output}（selected={selected}，{len(distinct)} 种颜色）")
 
 
 def main() -> int:

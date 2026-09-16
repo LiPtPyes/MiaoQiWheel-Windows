@@ -244,8 +244,13 @@ LZMA 只要 22.3 MiB。用 `python tools\make_7z.py` 生成。
 | 文件 | 出处 | 说明 |
 |---|---|---|
 | `m1-wheel.png`、`m1-wheel-selected.png` | `tools/smoke_wheel.py` | 离屏渲染的盘面，未选中 / 选中第 2 项 |
+| `m2-wheel-active.png` | `tools/smoke_m2.py` | 呼出并命中第 2 项（默认项的真实渲染，非桩数据） |
 | `m5-glass.png` | `tools/shot_glass.py --gradient` | 毛玻璃效果，底层是一张现生成的蓝紫渐变 |
 | `m3-presets.png`、`m4-*.png` | 各 `tools/smoke_m*.py` | 动作库 / 设置页等界面 |
+
+`m1`、`m2` 两张看着几乎一样（都是选中第 2 项），但出处不同：`m1` 是单独渲染
+`WheelFaceWidget`，`m2` 走的是完整的「控制器呼出 → 指针命中 → 截图」链路，
+用来验证真实窗口尺寸下的取景。改过呼出逻辑后优先看 `m2` 那张。
 
 **⚠ 不要把 `tools/smoke_m5.py` 产出的 `docs/m5-glass.png` 当配图用。** 它是像素断言的
 测试夹具：底图来自 `synthetic_backdrop()`，一张纯洋红 + 深洋红条纹的测试图案，
