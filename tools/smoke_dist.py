@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 import ctypes
-import os
 import subprocess
 import sys
 import time
@@ -29,11 +28,21 @@ from ctypes import wintypes
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))  # 复用应用自己的常量，避免两处实现各写一遍
+
+from mqwheel.app_identity import SINGLE_INSTANCE_MUTEX, config_dir  # noqa: E402
+
 DEFAULT_EXE = ROOT / "dist" / "MiaoQiWheel" / "MiaoQiWheel.exe"
 EXE = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_EXE
-CONFIG = Path(os.environ.get("APPDATA", Path.home())) / "MiaoQiWheel" / "settings.json"
+
+# ⚠ 这两个路径**必须**跟应用算出来的一模一样，所以直接调应用的函数而不是自己拼。
+# 曾经这里写的是 `Path(os.environ.get("APPDATA", Path.home())) / "MiaoQiWheel"`，
+# 而应用的兜底是 `~/.miaoqiwheel` —— 加上本机 bash 里 APPDATA **整批缺失**，
+# 结果脚本盯着一个永远不会出现的路径等了 20 秒，报「启动并写配置 失败」，
+# 看着像打包坏了，其实只是脚本找错了地方。
+CONFIG = config_dir() / "settings.json"
 CRASH = CONFIG.parent / "crash.log"
-MUTEX_NAME = r"Local\MiaoQiWheel.SingleInstance.v1"
+MUTEX_NAME = SINGLE_INSTANCE_MUTEX
 SYNCHRONIZE = 0x00100000
 
 kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)

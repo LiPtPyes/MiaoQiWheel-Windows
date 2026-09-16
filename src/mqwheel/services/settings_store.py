@@ -10,22 +10,15 @@ import os
 import tempfile
 from pathlib import Path
 
-from mqwheel.app_identity import APP_ID
+from mqwheel.app_identity import config_dir
 from mqwheel.models.settings import WheelSettings
 
 FILE_NAME = "settings.json"
 
 
-def _base_dir() -> Path:
-    appdata = os.environ.get("APPDATA")
-    if appdata:
-        return Path(appdata) / APP_ID
-    return Path.home() / f".{APP_ID.lower()}"
-
-
 class SettingsStore:
     def __init__(self, path: Path | None = None) -> None:
-        self.path = Path(path) if path else _base_dir() / FILE_NAME
+        self.path = Path(path) if path else config_dir() / FILE_NAME
 
     def exists(self) -> bool:
         return self.path.exists()

@@ -16,24 +16,22 @@ if __package__ in (None, ""):  # 允许以脚本方式直接运行
 
 from mqwheel.app_identity import (  # noqa: E402
     APP_ICON_PATH,
-    APP_ID,
     APP_NAME,
     ORG_NAME,
     SINGLE_INSTANCE_MUTEX,
+    config_dir,
 )
 from mqwheel.services.win32_ext import SingleInstanceGuard  # noqa: E402
 
 
 def _install_crash_hook() -> None:
     """打包为 windowed 后没有控制台，未捕获异常必须落盘，否则无从反馈。"""
-    import os
     import traceback
     from datetime import datetime
 
     def write(text: str) -> None:
         try:
-            appdata = os.environ.get("APPDATA")
-            base = Path(appdata) / APP_ID if appdata else Path.home() / f".{APP_ID.lower()}"
+            base = config_dir()
             base.mkdir(parents=True, exist_ok=True)
             with open(base / "crash.log", "a", encoding="utf-8") as handle:
                 handle.write(f"\n=== {datetime.now():%Y-%m-%d %H:%M:%S} ===\n{text}")

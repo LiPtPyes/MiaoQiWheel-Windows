@@ -8,7 +8,7 @@ import subprocess
 from PySide6 import QtCore, QtWidgets
 
 from mqwheel import __version__ as VERSION
-from mqwheel.app_identity import APP_ID, APP_NAME, ORG_NAME
+from mqwheel.app_identity import APP_NAME, ORG_NAME, config_dir
 from mqwheel.views.common import PageWidget, SectionCard, hint_label
 
 CREDITS: tuple[tuple[str, str], ...] = (
@@ -19,8 +19,10 @@ CREDITS: tuple[tuple[str, str], ...] = (
 )
 
 
-def config_dir() -> str:
-    return os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), APP_ID)
+def config_dir_str() -> str:
+    """「关于」页要显示/打开的配置目录。走 app_identity.config_dir() 这个唯一真源，
+    保证显示的路径和实际写入的路径永远一致。"""
+    return str(config_dir())
 
 
 class AboutPage(PageWidget):
@@ -62,7 +64,7 @@ class AboutPage(PageWidget):
 
     def _add_paths(self) -> None:
         card = SectionCard("数据位置", self)
-        path = config_dir()
+        path = config_dir_str()
         line = QtWidgets.QLineEdit(path)
         line.setReadOnly(True)
         card.add_row("配置目录", line)
@@ -80,7 +82,7 @@ class AboutPage(PageWidget):
 
     @staticmethod
     def _open_config_dir() -> None:
-        path = config_dir()
+        path = config_dir_str()
         try:
             os.makedirs(path, exist_ok=True)
             os.startfile(path)  # noqa: S606 - 仅打开资源管理器
