@@ -6,8 +6,12 @@
 ; 编译前请先运行 scripts\build.bat 生成 dist\MiaoQiWheel\；
 ; 然后运行 scripts\build_installer.bat（会自动读取版本号并调用本脚本）。
 ;
-; 手动编译：
-;   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=1.1.0 installer\MiaoQiWheel.iss
+; 手动编译（版本号必须自己传，且 VersionInfoVer 要四段）：
+;   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ^
+;     /DAppVersion=1.1.0 /DVersionInfoVer=1.1.0.0 installer\MiaoQiWheel.iss
+;
+; 更推荐直接跑 scripts\build_installer.bat —— 它会从 src\mqwheel\__init__.py
+; 读出 __version__ 再传进来，不用手工同步任何版本号。
 ;
 ; 设计取向：
 ;   - 与项目"绿色便携"的调性一致：默认装到用户目录（免管理员），卸载时询问是否保留配置；
@@ -19,14 +23,25 @@
 #define AppPublisher "MiaoQiWheel"
 #define AppExeName "MiaoQiWheel.exe"
 
+; 版权声明。与 LICENSE（MIT）以及主程序 exe 的 LegalCopyright 保持一致，
+; 改这里时请一并检查 tools/version_info.py。
+#define AppCopyright "Copyright (c) 2026 晚棠 (MIT License)"
+
 ; 最低编译器版本：ArchitecturesAllowed=x64compatible 需要 Inno Setup 6.3+，
 ; 更早的版本只认 "x64"，用旧 ISCC 编译会报难以理解的错。
 ; 说明：这里不写 #if 断言——预处理器对 VER 的比较依赖 EncodeVer 是否可用，
 ; 不同版本行为不一致，宁可不在脚本里做这个检查，改由 tools/make_installer.py 提示。
 
-; AppVersion 由编译命令 /D 传入；未传入时回退，保证脚本单独编译也不报错
+; AppVersion 与 VersionInfoVer 都由编译命令 /D 传入，这里**不写死兜底值**。
+; 写死的兜底迟早会和 src\mqwheel\__init__.py 的 __version__ 漂移，编出一个
+; 版本号对不上的安装包 —— 那比编译直接失败更难发现。所以宁可在这里报错。
+; VersionInfoVersion 必须是「x.x.x.x」四段数字，而 AppVersion 习惯上是三段
+; （1.1.0），故二者分开承载；tools/make_installer.py 从同一真源推导后传入。
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #error 缺少 /DAppVersion=，请用 tools\make_installer.py 或 scripts\build_installer.bat 编译本脚本。
+#endif
+#ifndef VersionInfoVer
+  #error 缺少 /DVersionInfoVer=（四段数字，如 1.1.0.0），请用 tools\make_installer.py 编译本脚本。
 #endif
 
 ; 以下三个路径宏由 tools/make_installer.py 以绝对路径传入（推荐方式）；
@@ -71,6 +86,20 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ; Windows 10 及以上
 MinVersion=10.0
+
+; ── 安装程序自身的版本资源 ──────────────────────────────────────────────
+; 不写这几条指令时，Inno 只会填默认值，结果是右键属性里
+; 「文件版本」「版权」「原始文件名」三项全为空白 —— 对一个对外分发的
+; 安装包来说很容易被当成来路不明的东西（也影响部分安全软件的判定）。
+; 注意 VersionInfoProductVersion 与 VersionInfoVersion 是两套东西：
+; 前者是自由字符串（显示用，可三段），后者必须是四段数字。
+VersionInfoVersion={#VersionInfoVer}
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription={#AppName} 安装程序
+VersionInfoCopyright={#AppCopyright}
+VersionInfoProductName={#AppName}
+VersionInfoProductVersion={#AppVersion}
+VersionInfoOriginalFileName={#AppNameEn}-Setup-{#AppVersion}.exe
 
 [Languages]
 ; 简体中文用的是社区翻译（简体中文不在 Inno Setup 自带语言之列），

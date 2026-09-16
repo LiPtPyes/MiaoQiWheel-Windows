@@ -23,7 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from version_info import version_text  # noqa: E402
+from version_info import version_quad, version_text  # noqa: E402
 
 ISS_PATH = ROOT / "installer" / "MiaoQiWheel.iss"
 SOURCE_DIR = ROOT / "dist" / "MiaoQiWheel"
@@ -141,6 +141,9 @@ def main(argv: list[str]) -> int:
         return 1
 
     version = version_text()
+    # 安装程序的 VersionInfoVersion 必须是四段数字（1.1.0.0），三段会被
+    # Inno 拒绝或留空；这里从同一真源补齐，避免在 .iss 里另写一份。
+    version_4 = version_quad()
     print(f"使用编译器：{iscc}")
     print(f"版本号：{version}")
     print(f"源目录：{SOURCE_DIR}")
@@ -152,6 +155,7 @@ def main(argv: list[str]) -> int:
     command = [
         str(iscc),
         f"/DAppVersion={version}",
+        f"/DVersionInfoVer={version_4}",
         f"/DSourceDir={SOURCE_DIR}",
         f"/DOutputDir={ROOT / 'dist'}",
         f"/DIconFile={ROOT / 'src' / 'mqwheel' / 'resources' / 'app.ico'}",

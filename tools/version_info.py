@@ -36,6 +36,16 @@ def version_text() -> str:
     return ".".join(str(part) for part in read_version()[:3])
 
 
+def version_quad() -> str:
+    """四段形式（``1.1.0.0``）。
+
+    安装程序的 ``VersionInfoVersion`` 只接受这种格式：给它三段的 ``1.1.0``
+    会被拒绝或留空，结果就是 exe 属性里「文件版本」一片空白。
+    单独拎出来是为了让 ``installer\\MiaoQiWheel.iss`` 不必另写一份版本号。
+    """
+    return ".".join(str(part) for part in read_version())
+
+
 def build_version_info() -> "VSVersionInfo":
     from PyInstaller.utils.win32.versioninfo import (
         FixedFileInfo,
@@ -66,11 +76,15 @@ def build_version_info() -> "VSVersionInfo":
                     StringTable(
                         "080404b0",  # 简体中文 / Unicode
                         [
+                            # Comments 是 Windows 属性页的「备注」，放项目来源这类
+                            # 说明性文字；LegalCopyright 则留给真正的版权声明，
+                            # 与 LICENSE（MIT）和 installer\MiaoQiWheel.iss 保持一致。
+                            StringStruct("Comments", "Port of MiaoQiWheel (macOS) to Windows"),
                             StringStruct("CompanyName", "MiaoQiWheel"),
                             StringStruct("FileDescription", "妙启轮盘"),
                             StringStruct("FileVersion", text),
                             StringStruct("InternalName", "MiaoQiWheel"),
-                            StringStruct("LegalCopyright", "Port of MiaoQiWheel (macOS) to Windows"),
+                            StringStruct("LegalCopyright", "Copyright (c) 2026 晚棠 (MIT License)"),
                             StringStruct("OriginalFilename", "MiaoQiWheel.exe"),
                             StringStruct("ProductName", "妙启轮盘"),
                             StringStruct("ProductVersion", text),
@@ -83,4 +97,4 @@ def build_version_info() -> "VSVersionInfo":
     )
 
 
-__all__ = ["build_version_info", "read_version", "version_text"]
+__all__ = ["build_version_info", "read_version", "version_quad", "version_text"]
