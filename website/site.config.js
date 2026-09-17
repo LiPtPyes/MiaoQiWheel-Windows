@@ -5,8 +5,8 @@
  * url 为空时按钮会自动变成「即将推出」并置灰，不会产生死链。
  */
 window.SITE_CONFIG = {
-  version: "1.1.0",
-  releaseDate: "2026-09-16",
+  version: "1.2.0",
+  releaseDate: "2026-09-17",
 
   downloads: {
     // 两个产物都放在 website/downloads/ 里，随站点一起部署：点下载走的就是
@@ -20,7 +20,7 @@ window.SITE_CONFIG = {
       note: "双击安装，自动创建快捷方式，卸载可保留设置",
     },
     portable: {
-      url: "downloads/MiaoQiWheel-v1.1.0-portable.7z",
+      url: "downloads/MiaoQiWheel-v1.2.0-portable.7z",
       size: "22.3 MB",
       label: "便携版",
       note: "解压即用，无需安装，可放 U 盘（需 7-Zip 或 WinRAR）",

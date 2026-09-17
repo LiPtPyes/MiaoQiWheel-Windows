@@ -20,8 +20,8 @@ website/
 
 | 文件 | 说明 |
 |---|---|
-| `MiaoQiWheel-Setup-1.1.0.exe` | 单文件安装程序，双击即可安装 |
-| `MiaoQiWheel-v1.1.0-portable.7z` | 便携版，解压即用（需 7-Zip / WinRAR） |
+| `MiaoQiWheel-Setup-1.2.0.exe` | 单文件安装程序，双击即可安装 |
+| `MiaoQiWheel-v1.2.0-portable.7z` | 便携版，解压即用（需 7-Zip / WinRAR） |
 
 整个 `website/` 目录是**自包含**的：本地预览能直接点按钮下载，把整个目录传上去也能直接用。
 
@@ -70,11 +70,11 @@ http://127.0.0.1:8765/?shot=%23contact      # 滚到「反馈与支持」
 ```js
 downloads: {
   installer: {
-    url: "downloads/MiaoQiWheel-Setup-1.1.0.exe",   // ← 换版本时改文件名
+    url: "downloads/MiaoQiWheel-Setup-1.2.0.exe",   // ← 换版本时改文件名
     size: "23.8 MB",
   },
   portable: {
-    url: "downloads/MiaoQiWheel-v1.1.0-portable.7z",
+    url: "downloads/MiaoQiWheel-v1.2.0-portable.7z",
     size: "22.3 MB",
   },
 },
@@ -244,8 +244,8 @@ LZMA 只要 22.3 MiB。用 `python tools\make_7z.py` 生成。
 
 | 产物 | 大小 | 距 25 MiB 余量 |
 |---|---|---|
-| `MiaoQiWheel-Setup-1.1.0.exe` | 23.80 MiB | 1.20 MiB |
-| `MiaoQiWheel-v1.1.0-portable.7z` | 22.27 MiB | 2.73 MiB |
+| `MiaoQiWheel-Setup-1.2.0.exe` | 23.80 MiB | 1.20 MiB |
+| `MiaoQiWheel-v1.2.0-portable.7z` | 22.29 MiB | 2.71 MiB |
 
 > 历史记录：v1.0.0 安装包是 24.62 MiB，只剩 0.38 MiB 余量。
 

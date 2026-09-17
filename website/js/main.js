@@ -525,7 +525,7 @@
     set("dlPortableNote", (dl.portable && dl.portable.note) || "");
 
     /* 版本号 */
-    const v = CFG.version || "1.1.0";
+    const v = CFG.version || "1.2.0";
     set("verBadge", "v" + v);
     set("verFoot", v);
 
