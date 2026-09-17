@@ -147,9 +147,17 @@ def test_editor_window_toggle_round_trips_path(qapp) -> None:
 
 
 def test_editor_window_toggle_hides_preset(qapp) -> None:
+    """预设下拉只对「快捷键 / 命令 / 内置」有意义。
+
+    这里必须用 `isHidden()` 而不是 `isVisible()`：编辑器从没 `show()` 过，
+    `isVisible()` 会因为祖先不可见而**恒返回 False**，断言就永远成立、测不到东西。
+    """
     editor = ActionEditor()
     editor.set_action(WheelAction(title="浏览器", kind=WheelActionKind.WINDOW_TOGGLE, payload="msedge.exe"))
-    assert not _combo(editor, 1).isVisible(), "窗口切换类型不需要预设下拉"
+    assert editor._preset.isHidden(), "窗口切换类型不需要预设下拉"
+
+    editor.set_action(WheelAction(title="", kind=WheelActionKind.SHELL_COMMAND, payload=""))
+    assert not editor._preset.isHidden(), "命令类型应当显示预设下拉"
 
 
 def test_editor_switching_path_kinds_keeps_the_path(qapp) -> None:
@@ -172,6 +180,118 @@ def test_editor_switching_to_url_does_not_leak_path(qapp) -> None:
     kind_box = _combo(editor, 0)
     kind_box.setCurrentIndex(kind_box.findData(WheelActionKind.URL.value))
     assert editor.collect().payload == "", "换到链接类型时不该把路径塞进去"
+
+
+# region 「窗口切换」的两个行为开关
+
+
+def _checkbox(parent: QtWidgets.QWidget, text: str) -> QtWidgets.QCheckBox:
+    for box in parent.findChildren(QtWidgets.QCheckBox):
+        if box.text() == text:
+            return box
+    raise AssertionError(f"找不到复选框：{text}")
+
+
+REUSE_TEXT = "已打开时回到原来那个窗口"
+MINIMIZE_TEXT = "已经在前台时收起窗口"
+
+
+def _toggle_editor(**kwargs) -> ActionEditor:
+    editor = ActionEditor()
+    editor.set_action(
+        WheelAction(
+            title="浏览器",
+            kind=WheelActionKind.WINDOW_TOGGLE,
+            payload="msedge.exe",
+            **kwargs,
+        )
+    )
+    return editor
+
+
+def test_editor_toggle_switches_round_trip(qapp) -> None:
+    """两个开关要能从 action 读进界面，也能从界面写回 action。"""
+    editor = _toggle_editor(reuse_window=False, minimize_when_active=False)
+
+    assert not _checkbox(editor, REUSE_TEXT).isChecked()
+    assert not _checkbox(editor, MINIMIZE_TEXT).isChecked()
+
+    result = editor.collect()
+    assert result.reuse_window is False
+    assert result.minimize_when_active is False
+
+
+def test_editor_toggle_switches_default_checked(qapp) -> None:
+    """默认是「复用窗口 + 在前台收起」，也就是这套行为一开始的样子。"""
+    editor = _toggle_editor()
+
+    assert _checkbox(editor, REUSE_TEXT).isChecked()
+    assert _checkbox(editor, MINIMIZE_TEXT).isChecked()
+
+    result = editor.collect()
+    assert result.reuse_window is True
+    assert result.minimize_when_active is True
+
+
+def test_editor_toggle_checkbox_change_reaches_action(qapp) -> None:
+    """复选框是用户唯一的入口，点它必须立刻反映到 action 上。"""
+    editor = _toggle_editor()
+
+    seen: list[WheelAction] = []
+    editor.action_changed.connect(seen.append)
+
+    _checkbox(editor, REUSE_TEXT).setChecked(False)
+
+    assert seen, "改勾选应当发出 action_changed"
+    assert seen[-1].reuse_window is False
+    assert editor.collect().reuse_window is False
+
+
+def test_editor_toggle_hint_follows_the_switches(qapp) -> None:
+    """提示文字跟着开关走，改完勾选不用切走再切回来就能看到新说明。"""
+    editor = _toggle_editor()
+    before = editor._hint.text()
+
+    _checkbox(editor, REUSE_TEXT).setChecked(False)
+    assert editor._hint.text() != before, "关掉复用后说明应当变"
+
+    _checkbox(editor, REUSE_TEXT).setChecked(True)
+    assert editor._hint.text() == before
+
+
+def test_editor_switches_ignored_for_other_kinds(qapp) -> None:
+    """两个开关只属于「窗口切换」，别的类型 collect() 不该去读它们。
+
+    否则复选框的默认勾选状态会把动作上原有的值悄悄改掉。
+    """
+    editor = ActionEditor()
+    editor.set_action(
+        WheelAction(
+            title="记事本",
+            kind=WheelActionKind.APPLICATION,
+            payload="notepad.exe",
+            reuse_window=False,
+            minimize_when_active=False,
+        )
+    )
+
+    result = editor.collect()
+    assert result.kind == WheelActionKind.APPLICATION
+    assert result.reuse_window is False
+    assert result.minimize_when_active is False
+
+
+def test_editor_switches_survive_a_kind_round_trip(qapp) -> None:
+    """在「窗口切换」里关掉开关、切走再切回来，勾选状态不该被重置。"""
+    editor = _toggle_editor()
+    _checkbox(editor, REUSE_TEXT).setChecked(False)
+
+    kind_box = _combo(editor, 0)
+    kind_box.setCurrentIndex(kind_box.findData(WheelActionKind.APPLICATION.value))
+    kind_box.setCurrentIndex(kind_box.findData(WheelActionKind.WINDOW_TOGGLE.value))
+
+    assert not _checkbox(editor, REUSE_TEXT).isChecked()
+    assert editor.collect().reuse_window is False
 
 
 # endregion
