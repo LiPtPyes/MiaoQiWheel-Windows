@@ -3,10 +3,14 @@
 为什么单独做这件事：浏览器这类单实例应用，再执行一次「打开」只会多出一个
 窗口；用户真正想要的是——已经开着就把它拉回最前，已经在前台就收起来。
 
-四个关键取舍：
+五个关键取舍：
 
 - **按进程可执行文件名判定「同一个应用」，不按窗口类名。** Chromium 系的窗口
   类都是 `Chrome_WidgetWin_1`，按类名匹配会把 VS Code、Electron 应用一起算进来。
+- **判断「它在不在前台」要看前台窗口属于哪个进程，而不是「前台句柄在不在候选
+  列表里」。** 应用都有自己的辅助窗口（浏览器的会话恢复提示、拖拽预览等，带
+  `WS_EX_TOOLWINDOW` 而被候选规则过滤掉）。这类窗口抢到前台时用户明明就在看这个
+  应用，按句柄判断却会得出「不在前台」，于是该收起的时候反而又去呼出一次。
 - **先 SW_RESTORE 再 SW_SHOWMAXIMIZED。** 窗口处于最小化状态时直接
   SHOWMAXIMIZED 不保证离开最小化；先还原一步更稳。
 - **呼出优先还原「上次收起的那个窗口」**，没有记忆时才挑 Z 序里最靠前、且
@@ -23,6 +27,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import time
 from ctypes import wintypes
 
 from mqwheel.services.win32_ext import kernel32, user32
@@ -31,6 +36,7 @@ from mqwheel.services.win32_ext import kernel32, user32
 RESULT_ACTIVATED = "activated"  # 已把已有窗口拉到最前并最大化
 RESULT_MINIMIZED = "minimized"  # 该应用本来就在前台，已收起
 RESULT_NOT_RUNNING = "notRunning"  # 没有窗口，调用方应正常启动它
+RESULT_NEW_WINDOW = "newWindow"  # 用户要求每次都新开，调用方应直接启动
 RESULT_FAILED = "failed"  # 参数不合法等
 
 SW_SHOWMAXIMIZED = 3
@@ -179,6 +185,21 @@ def foreground_window() -> int:
     return _hwnd(user32.GetForegroundWindow())
 
 
+def process_is_foreground(process_name: str) -> bool:
+    """当前前台窗口是否属于该进程。
+
+    只看「前台句柄在不在候选窗口列表里」是不够的：应用都有自己的辅助窗口
+    （浏览器启动时的会话恢复提示、拖拽预览、输入法候选框等，带
+    `WS_EX_TOOLWINDOW` 而被 `_is_candidate` 过滤掉）。这类窗口抢到前台时，
+    用户明明就在看这个应用，却会被判成「不在前台」——表现为「按一下没反应，
+    再按一下才动」。按进程名判断才能覆盖这种情况。
+    """
+    foreground = foreground_window()
+    if not foreground:
+        return False
+    return process_name_of_window(foreground) == process_name.lower()
+
+
 def _try_foreground(hwnd: int) -> bool:
     user32.SetForegroundWindow(wintypes.HWND(hwnd))
     if foreground_window() == hwnd:
@@ -255,10 +276,19 @@ def activate(hwnd: int) -> bool:
     return _try_foreground(hwnd)
 
 
-def toggle(exe_path: str) -> str:
+def toggle(
+    exe_path: str,
+    *,
+    reuse: bool = True,
+    minimize_when_active: bool = True,
+) -> str:
     """浏览器式切换：后台→呼出并最大化，前台→最小化，没开→交给调用方启动。
 
     `exe_path` 与「应用」类型一样是可执行文件路径，取文件名来匹配进程。
+
+    `reuse=False` 时完全不复用已有窗口，直接返回 `RESULT_NEW_WINDOW` 让调用方
+    新开一个；`minimize_when_active=False` 时，应用已经在前台也不收起，只把它
+    重新顶到最前。
     """
     global _last_window
 
@@ -266,23 +296,27 @@ def toggle(exe_path: str) -> str:
     if not process_name:
         return RESULT_FAILED
 
+    if not reuse:
+        # 用户要求每次都新开，那就一点都不碰已有窗口
+        return RESULT_NEW_WINDOW
+
     windows = list_windows(process_name)
     if not windows:
         _last_window = 0
         return RESULT_NOT_RUNNING
 
-    foreground = foreground_window()
-    # 必须同时要求「没被最小化」：窗口最小化之后 GetForegroundWindow 仍可能返回它
-    # （系统没找到别的窗口来接手前台）。只看句柄相等的话，再按一次会又走最小化分支，
-    # 表现成"按了没反应"。
-    if (
-        foreground
-        and foreground in windows
-        and not user32.IsIconic(wintypes.HWND(foreground))
-    ):
-        user32.ShowWindow(wintypes.HWND(foreground), SW_MINIMIZE)
-        _last_window = foreground
-        return RESULT_MINIMIZED
+    # 收起要同时满足两条：它确实在前台、且要收的那个窗口没被最小化。
+    # 后者不能省——窗口最小化之后 GetForegroundWindow 仍可能返回它（系统没找到
+    # 别的窗口来接手前台），少了这一条，再按一次会又走最小化分支，表现成"按了没反应"。
+    if minimize_when_active and process_is_foreground(process_name):
+        # 前台窗口本身就在候选里时，收它最准（那正是用户正在看的那个）。
+        # 只有当前台是应用的辅助窗口（被 _is_candidate 过滤掉了）才退回 _pick。
+        current = foreground_window()
+        target = current if current in windows else _pick(windows)
+        if not user32.IsIconic(wintypes.HWND(target)):
+            user32.ShowWindow(wintypes.HWND(target), SW_MINIMIZE)
+            _last_window = target
+            return RESULT_MINIMIZED
 
     target = _pick(windows)
     activate(target)
@@ -290,14 +324,45 @@ def toggle(exe_path: str) -> str:
     return RESULT_ACTIVATED
 
 
+def activate_when_appears(exe_path: str, timeout: float = 8.0, interval: float = 0.2) -> bool:
+    """等目标进程的窗口出现，然后把它最大化并拉到最前。
+
+    新启动的应用**不会理会** ShellExecute 传的 `nShowCmd` —— Chromium 系
+    （Edge / Chrome）按自己记住的尺寸开窗，所以「打开后没有最大化」这件事只能
+    等窗口出来之后再补一刀。窗口刚创建时还没有标题，会被 `_is_candidate` 过滤掉，
+    因此这里必须轮询而不是查一次就走。
+
+    调用方应放在后台线程里跑，别阻塞轮盘自己的执行路径。
+    """
+    global _last_window
+
+    process_name = os.path.basename(exe_path or "").strip().lower()
+    if not process_name:
+        return False
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        windows = list_windows(process_name)
+        if windows:
+            target = _pick(windows)
+            activate(target)
+            _last_window = target
+            return True
+        time.sleep(interval)
+    return False
+
+
 __all__ = [
     "RESULT_ACTIVATED",
     "RESULT_FAILED",
     "RESULT_MINIMIZED",
+    "RESULT_NEW_WINDOW",
     "RESULT_NOT_RUNNING",
     "activate",
+    "activate_when_appears",
     "foreground_window",
     "list_windows",
+    "process_is_foreground",
     "process_name_of_window",
     "reset",
     "toggle",

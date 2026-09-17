@@ -5,6 +5,7 @@ from __future__ import annotations
 import ctypes
 import os
 import subprocess
+import threading
 from ctypes import wintypes
 from pathlib import Path
 
@@ -24,6 +25,7 @@ shell32.ShellExecuteW.argtypes = [
 shell32.ShellExecuteW.restype = wintypes.HINSTANCE
 
 SW_SHOWNORMAL = 1
+SW_SHOWMAXIMIZED = 3
 _ERROR_THRESHOLD = 32  # ShellExecute 返回值 <=32 表示失败
 
 _MODIFIER_ALIASES = {
@@ -68,7 +70,7 @@ class ActionExecutor:
             if action.kind == WheelActionKind.APPLICATION:
                 return self._open_application(action.payload)
             if action.kind == WheelActionKind.WINDOW_TOGGLE:
-                return self._toggle_window(action.payload)
+                return self._toggle_window(action)
             if action.kind == WheelActionKind.URL:
                 return self._open_url(action.payload)
             if action.kind == WheelActionKind.KEYBOARD_SHORTCUT:
@@ -96,7 +98,7 @@ class ActionExecutor:
             self.last_error = builtin_actions.get_last_error() or f"内置动作 {builtin_id} 失败"
         return ok
 
-    def _open_application(self, payload: str) -> bool:
+    def _open_application(self, payload: str, *, maximize: bool = False) -> bool:
         if not payload:
             self.last_error = "未指定应用"
             return False
@@ -104,24 +106,51 @@ class ActionExecutor:
         if not path.exists():
             self.last_error = f"路径不存在：{payload}"
             return False
-        result = shell32.ShellExecuteW(None, "open", str(path), None, str(path.parent), SW_SHOWNORMAL)
+        result = shell32.ShellExecuteW(
+            None,
+            "open",
+            str(path),
+            None,
+            str(path.parent),
+            SW_SHOWMAXIMIZED if maximize else SW_SHOWNORMAL,
+        )
         if result <= _ERROR_THRESHOLD:
             self.last_error = f"启动失败（代码 {result}）：{payload}"
             return False
+        if maximize:
+            # 这里的 nShowCmd 对 Chromium 系应用基本无效 —— 它们按自己记住的尺寸
+            # 开窗，于是「打开后没有最大化」。只能等窗口真的出现再补一刀。
+            # 必须丢到线程里：本方法跑在轮盘的执行路径上，不能在这儿等好几秒。
+            threading.Thread(
+                target=window_control.activate_when_appears,
+                args=(payload,),
+                daemon=True,
+                name="mqwheel-activate-new-window",
+            ).start()
         return True
 
-    def _toggle_window(self, payload: str) -> bool:
+    def _toggle_window(self, action: WheelAction) -> bool:
         """已打开就呼出（必要时最大化），已在前台就收起，真没开才新建。
 
         与 `_open_application` 的区别只在这最后一步：只有拿到「没在运行」才落回
         启动流程，所以路径不存在也不会误报——应用正开着时根本用不到路径。
+
+        具体行为受动作上的两个开关控制：`reuse_window` 决定要不要复用已有窗口，
+        `minimize_when_active` 决定已经在前台时收不收起。
         """
+        payload = action.payload
         if not payload:
             self.last_error = "未指定应用"
             return False
-        result = window_control.toggle(payload)
-        if result == window_control.RESULT_NOT_RUNNING:
-            return self._open_application(payload)
+        result = window_control.toggle(
+            payload,
+            reuse=action.reuse_window,
+            minimize_when_active=action.minimize_when_active,
+        )
+        if result in (window_control.RESULT_NOT_RUNNING, window_control.RESULT_NEW_WINDOW):
+            # 「真没开」和「用户要求每次新开」都落到启动流程；都要求最大化，
+            # 否则新窗口会按应用记住的尺寸弹出来，和这个类型的语义对不上。
+            return self._open_application(payload, maximize=True)
         if result == window_control.RESULT_FAILED:
             self.last_error = f"无法识别的应用：{payload}"
             return False

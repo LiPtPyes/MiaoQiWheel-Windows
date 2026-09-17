@@ -38,6 +38,11 @@ class WheelAction:
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     preset_id: str | None = None
     preset_params: dict[str, str] | None = None
+    # 下面两项只对「窗口切换」有意义，其余类型读不到它们：
+    # 复用窗口 = 已打开就拉回原来那个（False 则每次都新开一个）；
+    # 已经在前台时收起 = 再按一次把它最小化（False 则保持原样）。
+    reuse_window: bool = True
+    minimize_when_active: bool = True
 
     def to_dict(self) -> dict:
         return {
@@ -49,6 +54,8 @@ class WheelAction:
             "payload": self.payload,
             "presetId": self.preset_id,
             "presetParams": self.preset_params,
+            "reuseWindow": self.reuse_window,
+            "minimizeWhenActive": self.minimize_when_active,
         }
 
     @classmethod
@@ -62,6 +69,9 @@ class WheelAction:
             payload=data.get("payload", ""),
             preset_id=data.get("presetId"),
             preset_params=data.get("presetParams"),
+            # 旧配置里没有这两项，取 True 即沿用一直以来的行为
+            reuse_window=bool(data.get("reuseWindow", True)),
+            minimize_when_active=bool(data.get("minimizeWhenActive", True)),
         )
 
 

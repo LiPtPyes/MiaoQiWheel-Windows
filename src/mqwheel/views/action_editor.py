@@ -160,7 +160,7 @@ class ActionEditor(QtWidgets.QWidget):
         self._app_row = _AppPathRow()
         self._toggle_row = _AppPathRow()
         self._stack.addWidget(self._app_row)
-        self._stack.addWidget(self._toggle_row)
+        self._stack.addWidget(self._build_toggle_page())
         self._stack.addWidget(self._build_url_page())
         self._stack.addWidget(self._build_shortcut_page())
         self._stack.addWidget(self._build_command_page())
@@ -182,6 +182,36 @@ class ActionEditor(QtWidgets.QWidget):
 
     def _path_row(self, kind: WheelActionKind) -> _AppPathRow:
         return self._toggle_row if kind == WheelActionKind.WINDOW_TOGGLE else self._app_row
+
+    def _build_toggle_page(self) -> QtWidgets.QWidget:
+        """「窗口切换」的参数页：目标程序 + 两个行为开关。
+
+        两个开关对应两件用户能直接感知到的事：点它的时候会不会多出一个窗口、
+        以及它已经显示在面前时再点一次会怎样。默认值就是这套行为一开始的样子
+        （复用窗口 + 收起），老配置读进来也是这两个值。
+        """
+        page = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        layout.addWidget(self._toggle_row)
+
+        self._reuse_window = QtWidgets.QCheckBox("已打开时回到原来那个窗口")
+        self._reuse_window.setToolTip(
+            "开启：这个应用已经开着，就把它的窗口拉回来，不会多开。\n"
+            "关闭：每次点都新开一个窗口（原来的窗口保持不动）。"
+        )
+        self._reuse_window.toggled.connect(self._emit)
+        layout.addWidget(self._reuse_window)
+
+        self._minimize_when_active = QtWidgets.QCheckBox("已经在前台时收起窗口")
+        self._minimize_when_active.setToolTip(
+            "开启：它已经显示在最前面时，再点一次就把它最小化。\n"
+            "关闭：已经在前台时只把它重新顶到最前，不收起。"
+        )
+        self._minimize_when_active.toggled.connect(self._emit)
+        layout.addWidget(self._minimize_when_active)
+        return page
 
     def _build_url_page(self) -> QtWidgets.QWidget:
         page = QtWidgets.QWidget()
@@ -247,6 +277,8 @@ class ActionEditor(QtWidgets.QWidget):
             )
             self._sync_kind_combo(action)
             self._reload_presets(action)
+            self._reuse_window.setChecked(action.reuse_window)
+            self._minimize_when_active.setChecked(action.minimize_when_active)
             self._sync_stack(action)
 
     def _sync_kind_combo(self, action: WheelAction) -> None:
@@ -346,10 +378,18 @@ class ActionEditor(QtWidgets.QWidget):
         if action.kind == WheelActionKind.BUILTIN:
             return "内置操作由程序直接调用 Windows 接口，不经过命令行。"
         if action.kind == WheelActionKind.WINDOW_TOGGLE:
-            return (
-                "已打开就把它还原并最大化到最前；它已经在前台就最小化；"
-                "真没打开才新建窗口。适合浏览器这类不想开第二个窗口的应用。"
+            if not action.reuse_window:
+                return (
+                    "每次点都新开一个窗口，已经开着的窗口保持不动。"
+                    "适合希望每次都是全新会话的场景。"
+                )
+            steps = ["已打开就把它还原并最大化到最前"]
+            steps.append(
+                "它已经在前台就最小化" if action.minimize_when_active
+                else "它已经在前台就只顶到最前、不收起"
             )
+            steps.append("真没打开才新建窗口，新窗口也会自动最大化")
+            return "；".join(steps) + "。"
         if action.kind == WheelActionKind.SHELL_COMMAND:
             return "命令会交给系统执行；参数按 cmd 规则加引号。"
         if action.kind == WheelActionKind.KEYBOARD_SHORTCUT:
@@ -369,7 +409,12 @@ class ActionEditor(QtWidgets.QWidget):
     def _emit(self) -> None:
         if self._loading or self._action is None:
             return
-        self.action_changed.emit(self.collect())
+        action = self.collect()
+        # 「窗口切换」的提示文字是跟着两个开关走的，这里顺手刷一下，
+        # 否则改完勾选要切走再切回来才看得到新说明。
+        self._hint.setText(self._hint_for(action))
+        self._hint.setVisible(bool(self._hint.text()))
+        self.action_changed.emit(action)
 
     def collect(self) -> WheelAction:
         """把表单内容写回当前 action 并返回。"""
@@ -384,6 +429,8 @@ class ActionEditor(QtWidgets.QWidget):
             action.payload = self._app_row.path()
         elif action.kind == WheelActionKind.WINDOW_TOGGLE:
             action.payload = self._toggle_row.path()
+            action.reuse_window = self._reuse_window.isChecked()
+            action.minimize_when_active = self._minimize_when_active.isChecked()
         elif action.kind == WheelActionKind.URL:
             action.payload = self._url_edit.text().strip()
         elif action.kind == WheelActionKind.KEYBOARD_SHORTCUT:
