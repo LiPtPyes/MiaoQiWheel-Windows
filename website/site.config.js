@@ -14,7 +14,7 @@ window.SITE_CONFIG = {
     // 若以后改放网盘 / GitHub Releases，把 url 换成 http(s) 开头的完整地址即可：
     // 页面会自动改成新窗口打开，备注也从「点击开始下载」变为「跳转外部页面」。
     installer: {
-      url: "downloads/MiaoQiWheel-Setup-1.1.0.exe",
+      url: "downloads/MiaoQiWheel-Setup-1.2.0.exe",
       size: "23.8 MB",
       label: "安装版",
       note: "双击安装，自动创建快捷方式，卸载可保留设置",
